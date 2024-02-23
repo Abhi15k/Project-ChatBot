@@ -126,12 +126,15 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # Process the received message
             docs = State.VectorStore.similarity_search(query=data)
-            llm = OpenAI()
-            chain = load_qa_chain(llm=llm, chain_type="stuff")
-            response = chain.run(input_documents=docs, question=data,k=3)
+            if not docs:
+                await websocket.send_text("No relevant information found in PDF")
+            else:
+                llm = OpenAI()
+                chain = load_qa_chain(llm=llm, chain_type="stuff")
+                response = chain.run(input_documents=docs, question=data,k=3)
 
-            # Send the response back to the client
-            await websocket.send_text(response)
+                # Send the response back to the client
+                await websocket.send_text(response)
     except WebSocketDisconnect:
         await websocket.close()
 
